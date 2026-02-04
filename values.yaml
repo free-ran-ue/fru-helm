@@ -42,11 +42,6 @@ gnb:
   volume:
     name: gnb-volume
     mount: /free-ran-ue/config
-  service:
-    name: gnb-service
-    type: ClusterIP
-    port: 4997
-    protocol: UDP
 
   n2if:  # NGAP
     ipAddress: 10.100.50.250

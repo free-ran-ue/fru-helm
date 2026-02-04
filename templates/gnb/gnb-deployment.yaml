@@ -56,10 +56,6 @@ spec:
       containers:
       - image: {{ .image.name }}:{{ .image.tag | default $.Chart.AppVersion }}
         name: {{ .name }}
-        ports:
-        - name: gnb-ue
-          containerPort: {{ .service.port }}
-          protocol: {{ .service.protocol }}
         securityContext:
           capabilities:
             add: ["NET_ADMIN"]
