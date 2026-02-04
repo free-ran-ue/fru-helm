@@ -46,7 +46,7 @@ Before starting UE, please remember to create a subscriber at free5GC's webconso
     Open another terminal and get into the pod
 
     ```bash
-    ping -I uetun0 10.100.100.13
+    ping -I ueTun0 10.100.100.13
     ```
 
     `10.100.100.13` is the default n6 at PSA-UPF-1.
