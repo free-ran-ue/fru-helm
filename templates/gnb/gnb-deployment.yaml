@@ -60,7 +60,7 @@ spec:
           capabilities:
             add: ["NET_ADMIN"]
         command: ["./free-ran-ue"]
-        args: ["gnb", "-c", "{{ .volume.mount }}/gnb-config.yaml"]
+        args: ["gnb", "-c", "{{ .volume.mount }}/gnb.yaml"]
         volumeMounts:
         - mountPath: {{ .volume.mount }}
           name: {{ .volume.name }}

@@ -8,7 +8,7 @@ metadata:
     app: {{ $.Values.projectName }}
     component: {{ .name }}
 data:
-  ue-config.yaml: |
+  ue.yaml: |
     {{- .configuration | nindent 4 }}
 
 {{- end }}

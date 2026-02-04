@@ -8,7 +8,7 @@ metadata:
     app: {{ $.Values.projectName }}
     component: {{ .name }}
 data:
-  gnb-config.yaml: |
+  gnb.yaml: |
     {{- .configuration | nindent 4 }}
 
 {{- end }}
