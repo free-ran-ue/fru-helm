@@ -1,0 +1,65 @@
+{{- with .Values.ue }}
+{{- if .enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "freeranue.fullname" $ }}-{{ .name }}
+  labels:
+    {{- include "freeranue.labels" $ | nindent 4 }}
+    app: {{ $.Values.projectName }}
+    component: {{ .name }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "freeranue.selectorLabels" $ | nindent 6 }}
+      app: {{ $.Values.projectName }}
+      component: {{ .name }}
+  replicas: {{ .replicaCount }}
+  template:
+    metadata:
+      labels:
+        {{- include "freeranue.selectorLabels" $ | nindent 8 }}
+        app: {{ $.Values.projectName }}
+        component: {{ .name }}
+      annotations:
+        {{- include "freeranue.ueAnnotations" $ | nindent 8 }}
+        {{- if $.Values.global.rannetwork.enabled }}
+        k8s.v1.cni.cncf.io/networks: '[
+            { "name": "{{ $.Values.global.rannetwork.name }}-{{ include "freeranue.fullname" $ }}",
+              "interface": "ran",
+              "ips": [ "{{ .ranif.ipAddress }}/{{ $.Values.global.rannetwork.cidr }}" ],
+              "gateway": [ "{{ $.Values.global.rannetwork.gatewayIP }}" ]
+            }
+            ]'
+        {{- end }}
+    spec:
+      imagePullSecrets:
+        {{- toYaml .imagePullSecrets | nindent 8 }}
+      securityContext:
+        {{- toYaml .podSecurityContext | nindent 8 }}
+      containers:
+      - image: {{ .image.name }}:{{ .image.tag | default $.Chart.AppVersion }}
+        name: {{ .name }}
+        securityContext:
+            {{- toYaml .securityContext | nindent 12 }}
+        command: ["tail", "-f", "/dev/null"]
+        volumeMounts:
+        - mountPath: {{ .volume.mount }}
+          name: {{ .volume.name }}
+        resources:
+            {{- toYaml .resources | nindent 12 }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {{- toYaml .nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .tolerations | nindent 8 }}
+
+      volumes:
+      - name: {{ .volume.name }}
+        configMap:
+          name: {{ .configmap.name }}
+{{- end }}
+{{- end }}
