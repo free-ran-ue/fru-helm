@@ -7,8 +7,8 @@ Please refer to [free5GC's official user guide](https://free5gc.org/guide/7-free
 ## Clone and Install
 
 ```bash
-git clone https://github.com/free-ran-ue/helm
-helm install -n free5gc fru ./free-ran-ue
+git clone https://github.com/free-ran-ue/fru-helm
+helm install -n free5gc fru ./fru-helm
 ```
 
 It is optinal to install free-ran-ue in `-n free5gc`.
