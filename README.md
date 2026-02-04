@@ -4,7 +4,7 @@
 
 Please refer to [free5GC's official user guide](https://free5gc.org/guide/7-free5gc-helm/) to install free5GC's microk8s environment.
 
-## clone and Run
+## Clone and Install
 
 ```bash
 git clone https://github.com/free-ran-ue/helm
@@ -13,6 +13,12 @@ helm install -n free5gc fru ./free-ran-ue
 
 It is optinal to install free-ran-ue in `-n free5gc`.
 
+## Uninstall after Using
+
+```bash
+helm uninstall -n free5gc fru
+```
+
 ## Start gNB & UE
 
 ### gNB
@@ -20,6 +26,8 @@ It is optinal to install free-ran-ue in `-n free5gc`.
 gNB will start automatically after the pod starting.
 
 ### UE
+
+Before starting UE, please remember to create a subscriber at free5GC's webconsole with default value and one `01-010203` slice.
 
 - Get into the pod
 
@@ -41,4 +49,4 @@ gNB will start automatically after the pod starting.
     ping -I uetun0 10.100.100.13
     ```
 
-    10.100.100.13 is the default n6 at PSA-UPF-1.
+    `10.100.100.13` is the default n6 at PSA-UPF-1.
