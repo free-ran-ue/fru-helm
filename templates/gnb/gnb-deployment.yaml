@@ -1,0 +1,87 @@
+{{- with .Values.gnb }}
+{{- if and .enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "freeranue.fullname" $ }}-{{ .name }}
+  labels:
+    {{- include "freeranue.labels" $ | nindent 4 }}
+    app: {{ $.Values.projectName }}
+    component: {{ .name }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "freeranue.selectorLabels" $ | nindent 6 }}
+      app: {{ $.Values.projectName }}
+      component: {{ .name }}
+  replicas: {{ .replicaCount }}
+  template:
+    metadata:
+      labels:
+        {{- include "freeranue.selectorLabels" $ | nindent 8 }}
+        app: {{ $.Values.projectName }}
+        component: {{ .name }}
+      annotations:
+        {{- include "freeranue.gnbAnnotations" $ | nindent 8 }}
+        {{- if or $.Values.global.n2network.enabled $.Values.global.n3network.enabled $.Values.global.rannetwork.enabled}}
+        k8s.v1.cni.cncf.io/networks: '[
+        {{- if $.Values.global.n2network.enabled }}
+            { "name": "{{ $.Values.global.n2network.name }}-{{ include "freeranue.fullname" $ }}",
+              "interface": "n2",
+              "ips": [ "{{ .n2if.ipAddress }}/{{ $.Values.global.n2network.cidr }}" ],
+              "gateway": [ "{{ $.Values.global.n2network.gatewayIP }}" ]
+            },
+        {{- end }}
+        {{- if $.Values.global.n3network.enabled }}
+            { "name": "{{ $.Values.global.n3network.name }}-{{ include "freeranue.fullname" $ }}",
+              "interface": "n3",
+              "ips": [ "{{ .n3if.ipAddress }}/{{ $.Values.global.n3network.cidr }}" ],
+              "gateway": [ "{{ $.Values.global.n3network.gatewayIP }}" ]
+            },
+        {{- end }}
+        {{- if $.Values.global.rannetwork.enabled }}
+            { "name": "{{ $.Values.global.rannetwork.name }}-{{ include "freeranue.fullname" $ }}",
+              "interface": "ran",
+              "ips": [ "{{ .ranif.ipAddress }}/{{ $.Values.global.rannetwork.cidr }}" ],
+              "gateway": [ "{{ $.Values.global.rannetwork.gatewayIP }}" ]
+            }
+        {{- end }}
+            ]'
+        {{- end }}
+    spec:
+      imagePullSecrets:
+        {{- toYaml .imagePullSecrets | nindent 8 }}
+      securityContext:
+        {{- toYaml .podSecurityContext | nindent 8 }}
+      containers:
+      - image: {{ .image.name }}:{{ .image.tag | default $.Chart.AppVersion }}
+        name: {{ .name }}
+        ports:
+        - name: gnb-ue
+          containerPort: {{ .service.port }}
+          protocol: {{ .service.protocol }}
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN"]
+        command: ["./free-ran-ue"]
+        args: ["gnb", "-c", "{{ .volume.mount }}/gnb-config.yaml"]
+        volumeMounts:
+        - mountPath: {{ .volume.mount }}
+          name: {{ .volume.name }}
+        resources:
+            {{- toYaml .resources | nindent 12 }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {{- toYaml .nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .tolerations | nindent 8 }}
+
+      volumes:
+      - name: {{ .volume.name }}
+        configMap:
+          name: {{ .configmap.name }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,38 @@
+{{- if .Values.global.rannetwork.enabled }}
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: {{ .Values.global.rannetwork.name }}-{{ include "freeranue.fullname" $ }}
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "plugins": [
+        {
+          "type": {{ .Values.global.rannetwork.type | quote }},
+          "capabilities": { "ips": true },
+          "master": {{ .Values.global.rannetwork.masterIf | quote }},
+{{- if eq .Values.global.rannetwork.type "macvlan" }}
+          "mode": "bridge",
+{{- end }}
+{{- if eq .Values.global.rannetwork.type "ipvlan" }}
+          "mode": "l2",
+{{- end }}
+          "ipam": {
+            "type": "static",
+            "routes": [
+              {
+                "dst": "0.0.0.0/0",
+                "gw": "{{ .Values.global.rannetwork.gatewayIP }}"
+              }
+            ]
+          }
+        }
+{{- if eq .Values.global.rannetwork.type "macvlan" -}}
+        , {
+          "capabilities": { "mac": true },
+          "type": "tuning"
+        }
+{{- end }}
+      ]
+    }'
+{{- end }}

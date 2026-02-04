@@ -1,0 +1,118 @@
+projectName: freeranue
+
+global:
+  n2network:
+    enabled: true
+    name: n2network
+    type: ipvlan
+    masterIf: ens19
+    subnetIP: 10.100.50.248
+    cidr: 29
+    gatewayIP: 10.100.50.254
+    excludeIP: 10.100.50.254
+  n3network:
+    enabled: true
+    name: n3network
+    type: ipvlan
+    masterIf: ens19
+    subnetIP: 10.100.50.232
+    cidr: 29
+    gatewayIP: 10.100.50.238
+    excludeIP: 10.100.50.238
+  rannetwork:
+    enabled: true
+    name: rannetwork
+    type: ipvlan
+    masterIf: ens19
+    subnetIP: 10.100.50.216
+    cidr: 29
+    gatewayIP: 10.100.50.222
+    excludeIP: 10.100.50.222
+
+gnb:
+  enabled: true
+  name: gnb
+  replicaCount: 1
+  image:
+    name: alonza0314/free-ran-ue
+    tag: latest
+    pullPolicy: IfNotPresent
+  configmap:
+    name: gnb-configmap
+  volume:
+    name: gnb-volume
+    mount: /free-ran-ue/config
+  service:
+    name: gnb-service
+    type: ClusterIP
+    port: 4997
+    protocol: UDP
+
+  n2if:  # NGAP
+    ipAddress: 10.100.50.250
+  n3if:  # GTP-U
+    ipAddress: 10.100.50.236
+  ranif:  # RAN interface
+    ipAddress: 10.100.50.217
+
+  amf:
+    n2if:  # NGAP
+      ipAddress: 10.100.50.249
+      port: 38412
+    service:
+      ngap:
+        enabled: false
+
+  podAnnotations: {}
+    # additional annotations
+  imagePullSecrets: []
+  podSecurityContext: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  configuration: |-
+    gnb:
+      amfN2Ip: "10.100.50.249" # AMF N2 IP at core network
+      ranN2Ip: "10.100.50.250" # RAN N2 IP for connecting to AMF
+      upfN3Ip: "10.100.50.233" # UPF N3 IP at core network
+      ranN3Ip: "10.100.50.236" # RAN N3 IP for connecting to UPF
+
+      ranControlPlaneIp: "10.100.50.217" # RAN Control Plane IP open for UE connection
+      ranDataPlaneIp: "10.100.50.217" # RAN Data Plane IP open for UE connection
+
+      amfN2Port: 38412 # AMF N2 SCTP port at core network
+      ranN2Port: 38413 # RAN N2 SCTP port for connecting to AMF
+      upfN3Port: 2152 # UPF N3 GTP-U port at core network
+      ranN3Port: 2152 # RAN N3 GTP-U port for connecting to UPF
+
+      ranControlPlanePort: 31413 # RAN Control Plane port open for UE connection
+      ranDataPlanePort: 31414 # RAN Data Plane port open for UE connection
+
+      gnbId: "000314" # gNB ID
+      gnbName: "gNB" # gNB name
+
+      plmnId:
+        mcc: "208" # Mobile Country Code
+        mnc: "93" # Mobile Network Code
+
+      tai:
+        tac: "000001" # Tracking Area Code
+        broadcastPlmnId:
+          mcc: "208" # Mobile Country Code
+          mnc: "93" # Mobile Network Code
+
+      snssai:
+        sst: "1" # Slice/Service Type
+        sd: "010203" # Slice Differentiator
+
+      api:
+        ip: "10.100.50.217" # API for console usage
+        port: 40104 # API port for console usage
+
+    logger:
+      level: "info" # error, warn, info, debug, trace, test
