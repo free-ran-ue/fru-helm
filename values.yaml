@@ -41,7 +41,7 @@ gnb:
     name: gnb-configmap
   volume:
     name: gnb-volume
-    mount: /free-ran-ue
+    mount: /free-ran-ue/config
 
   n2if:  # NGAP
     ipAddress: 10.100.50.250
@@ -124,7 +124,7 @@ ue:
     name: ue-configmap
   volume:
     name: ue-volume
-    mount: /free-ran-ue
+    mount: /free-ran-ue/config
 
   ranif:  # RAN interface for connecting to gNB
     ipAddress: 10.100.50.218
