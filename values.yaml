@@ -66,7 +66,7 @@ gnb:
       port: 38412
     service:
       ngap:
-        enabled: false  # force AMF service mode even when multus is enabled
+        enabled: false
 
   podAnnotations: {}
     # additional annotations
@@ -85,10 +85,10 @@ gnb:
       amfN2Ip: "AMF_N2_IP" # AMF N2 endpoint (IP or service), replaced by wrapper
       ranN2Ip: "RAN_N2_IP" # RAN N2 IP for connecting to AMF, replaced by wrapper
       upfN3Ip: "10.100.50.233" # UPF N3 IP at core network
-      ranN3Ip: "10.100.50.236" # RAN N3 IP for connecting to UPF
+      ranN3Ip: "RAN_N3_IP" # RAN N3 IP for connecting to UPF, replaced by wrapper
 
-      ranControlPlaneIp: "10.100.50.217" # RAN Control Plane IP open for UE connection
-      ranDataPlaneIp: "10.100.50.217" # RAN Data Plane IP open for UE connection
+      ranControlPlaneIp: "RAN_CTRL_IP" # RAN Control Plane IP open for UE connection, replaced by wrapper
+      ranDataPlaneIp: "RAN_DATA_IP" # RAN Data Plane IP open for UE connection, replaced by wrapper
 
       amfN2Port: AMF_N2_PORT # AMF N2 SCTP port at core network, replaced by wrapper
       ranN2Port: 38413 # RAN N2 SCTP port for connecting to AMF
@@ -116,7 +116,7 @@ gnb:
         sd: "010203" # Slice Differentiator
 
       api:
-        ip: "10.100.50.217" # API for console usage
+        ip: "GNB_API_IP" # API for console usage, replaced by wrapper
         port: 40104 # API port for console usage
 
     logger:

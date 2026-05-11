@@ -59,12 +59,10 @@ spec:
         {{- with $.Values.initcontainers.sctp_test }}
         image: {{ .image }}:{{ .tag }}
         {{- end }}
-      {{- if and (not $.Values.global.gnb.multus.enabled) (not .amf.service.ngap.enabled) }}
-        command: ["sh", "-c", "until sctp_test -s -H 0.0.0.0 -P 25000 -h {{ $.Values.global.free5gcReleaseName }}-{{ .amf.n2if.serviceName }} -p {{ .amf.n2if.port }}; do echo waiting for the AMF; sleep 2; done;"]
-      {{- else if .amf.service.ngap.enabled }}
-        command: ["sh", "-c", "until sctp_test -s -H 0.0.0.0 -P 25000 -h {{ $.Values.global.free5gcReleaseName }}-{{ .amf.n2if.serviceName }} -p {{ .amf.n2if.port }}; do echo waiting for the AMF; sleep 2; done;"]
-{{- else }}
+{{- if $.Values.global.gnb.multus.enabled }}
         command: ["sh", "-c", "until sctp_test -s -H 0.0.0.0 -P 25000 -h {{ .amf.n2if.ipAddress }} -p {{ .amf.n2if.port }}; do echo waiting for the AMF; sleep 2; done;"]
+{{- else }}
+        command: ["sh", "-c", "until sctp_test -s -H 0.0.0.0 -P 25000 -h {{ $.Values.global.free5gcReleaseName }}-{{ .amf.n2if.serviceName }} -p {{ .amf.n2if.port }}; do echo waiting for the AMF; sleep 2; done;"]
 {{- end }}
       containers:
       - image: {{ .image.name }}:{{ .image.tag | default $.Chart.AppVersion }}
