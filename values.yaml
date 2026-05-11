@@ -9,12 +9,12 @@ global:
   free5gcReleaseName: free5gc-helm  # Name of the free5gc helm release
   gnb:
     multus:
-      enabled: true
+      enabled: false
       n2network:
         enabled: true
         name: n2network
         type: ipvlan
-        masterIf: ens19
+        masterIf: eth0
         subnetIP: 10.100.50.248
         cidr: 29
         gatewayIP: 10.100.50.254
@@ -23,7 +23,7 @@ global:
         enabled: true
         name: n3network
         type: ipvlan
-        masterIf: ens19
+        masterIf: eth0
         subnetIP: 10.100.50.232
         cidr: 29
         gatewayIP: 10.100.50.238
@@ -32,7 +32,7 @@ global:
         enabled: true
         name: rannetwork
         type: ipvlan
-        masterIf: ens19
+        masterIf: eth0
         subnetIP: 10.100.50.216
         cidr: 29
         gatewayIP: 10.100.50.222
