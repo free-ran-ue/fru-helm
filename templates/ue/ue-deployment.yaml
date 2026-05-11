@@ -37,13 +37,42 @@ spec:
         {{- toYaml .imagePullSecrets | nindent 8 }}
       securityContext:
         {{- toYaml .podSecurityContext | nindent 8 }}
+      initContainers:
+      - image: {{ .image.name }}:{{ .image.tag | default $.Chart.AppVersion }}
+        name: prepare-ue-config
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e
+            GNB_SERVICE_HOST="{{ $.Values.gnb.service.name }}"
+            echo "[UE init] resolving gNB service: ${GNB_SERVICE_HOST}"
+            GNB_SERVICE_IP="$(getent hosts "${GNB_SERVICE_HOST}" 2>/dev/null | awk 'NR==1 {print $1}')"
+            if [ -z "${GNB_SERVICE_IP}" ]; then
+              GNB_SERVICE_IP="$(nslookup "${GNB_SERVICE_HOST}" 2>/dev/null | awk '/^Address: / {print $2}' | tail -n 1)"
+            fi
+            if [ -z "${GNB_SERVICE_IP}" ]; then
+              echo "[UE init] failed to resolve gNB service: ${GNB_SERVICE_HOST}" >&2
+              exit 1
+            fi
+            cp /config-src/ue.yaml {{ .volume.mount }}/ue.yaml
+            sed -i "s|GNB_CTRL_IP|${GNB_SERVICE_IP}|g" {{ .volume.mount }}/ue.yaml
+            sed -i "s|GNB_DATA_IP|${GNB_SERVICE_IP}|g" {{ .volume.mount }}/ue.yaml
+            if [ -f /config-src/wrapper.sh ]; then
+              cp /config-src/wrapper.sh {{ .volume.mount }}/wrapper.sh
+              chmod +x {{ .volume.mount }}/wrapper.sh
+            fi
+            echo "[UE init] rendered {{ .volume.mount }}/ue.yaml with gNB IP ${GNB_SERVICE_IP}"
+        volumeMounts:
+        - mountPath: {{ .volume.mount }}
+          name: {{ .volume.name }}
+        - mountPath: /config-src
+          name: ue-config-template
       containers:
       - image: {{ .image.name }}:{{ .image.tag | default $.Chart.AppVersion }}
         name: {{ .name }}
         securityContext:
             {{- toYaml .securityContext | nindent 12 }}
-        command: ["/bin/sh", "-c"]
-        args: ["sh {{ .volume.mount }}/wrapper.sh"]
+        command: ["tail", "-f", "/dev/null"]
         volumeMounts:
         - mountPath: {{ .volume.mount }}
           name: {{ .volume.name }}
@@ -60,7 +89,15 @@ spec:
 
       volumes:
       - name: {{ .volume.name }}
+        emptyDir: {}
+      - name: ue-config-template
         configMap:
           name: {{ .configmap.name }}
+          items:
+          - key: ue.yaml
+            path: ue.yaml
+          - key: wrapper.sh
+            path: wrapper.sh
+            mode: 0755
 {{- end }}
 {{- end }}
