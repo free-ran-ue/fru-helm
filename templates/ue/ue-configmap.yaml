@@ -11,5 +11,27 @@ data:
   ue.yaml: |
     {{- .configuration | nindent 4 }}
 
+  wrapper.sh: |
+    #!/bin/sh
+    set -e
+
+    GNB_SERVICE_HOST="{{ $.Values.gnb.service.name }}"
+    echo "[UE wrapper] resolving gNB service: ${GNB_SERVICE_HOST}"
+    GNB_SERVICE_IP="$(getent hosts "${GNB_SERVICE_HOST}" 2>/dev/null | awk 'NR==1 {print $1}')"
+    if [ -z "${GNB_SERVICE_IP}" ]; then
+      GNB_SERVICE_IP="$(nslookup "${GNB_SERVICE_HOST}" 2>/dev/null | awk '/^Address: / {print $2}' | tail -n 1)"
+    fi
+    if [ -z "${GNB_SERVICE_IP}" ]; then
+      echo "[UE wrapper] failed to resolve gNB service: ${GNB_SERVICE_HOST}" >&2
+      exit 1
+    fi
+
+    cp {{ .volume.mount }}/ue.yaml /tmp/ue.yaml
+    sed -i "s|GNB_CTRL_IP|${GNB_SERVICE_IP}|g" /tmp/ue.yaml
+    sed -i "s|GNB_DATA_IP|${GNB_SERVICE_IP}|g" /tmp/ue.yaml
+    echo "[UE wrapper] using gNB endpoint ${GNB_SERVICE_IP}"
+
+    exec ./free-ran-ue ue -c /tmp/ue.yaml
+
 {{- end }}
 {{- end }}

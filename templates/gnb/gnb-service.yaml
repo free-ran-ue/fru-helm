@@ -1,0 +1,33 @@
+{{- with .Values.gnb }}
+{{- if and .enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .service.name }}
+  labels:
+    app: {{ $.Values.projectName }}
+    component: {{ .name }}
+spec:
+  type: {{ .service.type }}
+  ports:
+    - name: ran-control-tcp
+      port: {{ .service.controlPlanePort }}
+      protocol: TCP
+      targetPort: {{ .service.controlPlanePort }}
+    - name: ran-data-tcp
+      port: {{ .service.dataPlanePort }}
+      protocol: TCP
+      targetPort: {{ .service.dataPlanePort }}
+    - name: ran-control-udp
+      port: {{ .service.controlPlanePort }}
+      protocol: UDP
+      targetPort: {{ .service.controlPlanePort }}
+    - name: ran-data-udp
+      port: {{ .service.dataPlanePort }}
+      protocol: UDP
+      targetPort: {{ .service.dataPlanePort }}
+  selector:
+    app: {{ $.Values.projectName }}
+    component: {{ .name }}
+{{- end }}
+{{- end }}

@@ -1,33 +1,42 @@
 projectName: freeranue
 
+initcontainers:
+  sctp_test:
+    image: towards5gs/sctp_test
+    tag: latest
+
 global:
-  n2network:
-    enabled: true
-    name: n2network
-    type: ipvlan
-    masterIf: ens19
-    subnetIP: 10.100.50.248
-    cidr: 29
-    gatewayIP: 10.100.50.254
-    excludeIP: 10.100.50.254
-  n3network:
-    enabled: true
-    name: n3network
-    type: ipvlan
-    masterIf: ens19
-    subnetIP: 10.100.50.232
-    cidr: 29
-    gatewayIP: 10.100.50.238
-    excludeIP: 10.100.50.238
-  rannetwork:
-    enabled: true
-    name: rannetwork
-    type: ipvlan
-    masterIf: ens19
-    subnetIP: 10.100.50.216
-    cidr: 29
-    gatewayIP: 10.100.50.222
-    excludeIP: 10.100.50.222
+  free5gcReleaseName: free5gc-helm  # Name of the free5gc helm release
+  gnb:
+    multus:
+      enabled: false
+      n2network:
+        enabled: true
+        name: n2network
+        type: ipvlan
+        masterIf: eth0
+        subnetIP: 10.100.50.248
+        cidr: 29
+        gatewayIP: 10.100.50.254
+        excludeIP: 10.100.50.254
+      n3network:
+        enabled: true
+        name: n3network
+        type: ipvlan
+        masterIf: eth0
+        subnetIP: 10.100.50.232
+        cidr: 29
+        gatewayIP: 10.100.50.238
+        excludeIP: 10.100.50.238
+      rannetwork:
+        enabled: true
+        name: rannetwork
+        type: ipvlan
+        masterIf: eth0
+        subnetIP: 10.100.50.216
+        cidr: 29
+        gatewayIP: 10.100.50.222
+        excludeIP: 10.100.50.222
 
 gnb:
   enabled: true
@@ -42,6 +51,11 @@ gnb:
   volume:
     name: gnb-volume
     mount: /free-ran-ue/config
+  service:
+    name: gnb-service
+    type: ClusterIP
+    controlPlanePort: 31413
+    dataPlanePort: 31414
 
   n2if:  # NGAP
     ipAddress: 10.100.50.250
@@ -53,10 +67,15 @@ gnb:
   amf:
     n2if:  # NGAP
       ipAddress: 10.100.50.249
+      serviceName: free5gc-amf-amf-n2
       port: 38412
     service:
       ngap:
         enabled: false
+  upf:
+    n3if:
+      ipAddress: 10.100.50.233
+      serviceName: free5gc-upf-iupf1-service
 
   podAnnotations: {}
     # additional annotations
@@ -72,15 +91,15 @@ gnb:
 
   configuration: |-
     gnb:
-      amfN2Ip: "10.100.50.249" # AMF N2 IP at core network
-      ranN2Ip: "10.100.50.250" # RAN N2 IP for connecting to AMF
-      upfN3Ip: "10.100.50.233" # UPF N3 IP at core network
-      ranN3Ip: "10.100.50.236" # RAN N3 IP for connecting to UPF
+      amfN2Ip: "AMF_N2_IP" # AMF N2 endpoint (IP or service), replaced by wrapper
+      ranN2Ip: "RAN_N2_IP" # RAN N2 IP for connecting to AMF, replaced by wrapper
+      upfN3Ip: "UPF_N3_IP" # UPF N3 IP at core network, replaced by wrapper
+      ranN3Ip: "RAN_N3_IP" # RAN N3 IP for connecting to UPF, replaced by wrapper
 
-      ranControlPlaneIp: "10.100.50.217" # RAN Control Plane IP open for UE connection
-      ranDataPlaneIp: "10.100.50.217" # RAN Data Plane IP open for UE connection
+      ranControlPlaneIp: "RAN_CTRL_IP" # RAN Control Plane IP open for UE connection, replaced by wrapper
+      ranDataPlaneIp: "RAN_DATA_IP" # RAN Data Plane IP open for UE connection, replaced by wrapper
 
-      amfN2Port: 38412 # AMF N2 SCTP port at core network
+      amfN2Port: AMF_N2_PORT # AMF N2 SCTP port at core network, replaced by wrapper
       ranN2Port: 38413 # RAN N2 SCTP port for connecting to AMF
       upfN3Port: 2152 # UPF N3 GTP-U port at core network
       ranN3Port: 2152 # RAN N3 GTP-U port for connecting to UPF
@@ -106,7 +125,7 @@ gnb:
         sd: "010203" # Slice Differentiator
 
       api:
-        ip: "10.100.50.217" # API for console usage
+        ip: "GNB_API_IP" # API for console usage, replaced by wrapper
         port: 40104 # API port for console usage
 
     logger:
@@ -146,8 +165,8 @@ ue:
 
   configuration: |-
     ue:
-      ranControlPlaneIp: "10.100.50.217" # RAN Control Plane IP open for UE connection
-      ranDataPlaneIp: "10.100.50.217" # RAN Data Plane IP open for UE connection
+      ranControlPlaneIp: "GNB_CTRL_IP" # gNB control plane endpoint, replaced by wrapper
+      ranDataPlaneIp: "GNB_DATA_IP" # gNB data plane endpoint, replaced by wrapper
 
       ranControlPlanePort: 31413 # RAN Control Plane port open for UE connection
       ranDataPlanePort: 31414 # RAN Data Plane port open for UE connection
