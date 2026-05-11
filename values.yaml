@@ -51,6 +51,11 @@ gnb:
   volume:
     name: gnb-volume
     mount: /free-ran-ue/config
+  service:
+    name: gnb-service
+    type: ClusterIP
+    controlPlanePort: 31413
+    dataPlanePort: 31414
 
   n2if:  # NGAP
     ipAddress: 10.100.50.250
@@ -156,8 +161,8 @@ ue:
 
   configuration: |-
     ue:
-      ranControlPlaneIp: "10.100.50.217" # RAN Control Plane IP open for UE connection
-      ranDataPlaneIp: "10.100.50.217" # RAN Data Plane IP open for UE connection
+      ranControlPlaneIp: "gnb-service" # gNB control plane endpoint
+      ranDataPlaneIp: "gnb-service" # gNB data plane endpoint
 
       ranControlPlanePort: 31413 # RAN Control Plane port open for UE connection
       ranDataPlanePort: 31414 # RAN Data Plane port open for UE connection
