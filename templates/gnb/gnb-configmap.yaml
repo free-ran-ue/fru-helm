@@ -11,5 +11,39 @@ data:
   gnb.yaml: |
     {{- .configuration | nindent 4 }}
 
+  wrapper.sh: |
+    #!/bin/sh
+    set -e
+
+{{- if .amf.service.ngap.enabled }}
+    AMF_N2_HOST="{{ $.Values.global.free5gcReleaseName }}-{{ .amf.n2if.serviceName }}"
+    echo "[gNB wrapper] resolving AMF service: ${AMF_N2_HOST}"
+    AMF_N2_IP="$(getent hosts "${AMF_N2_HOST}" 2>/dev/null | awk 'NR==1 {print $1}')"
+    if [ -z "${AMF_N2_IP}" ]; then
+      AMF_N2_IP="$(nslookup "${AMF_N2_HOST}" 2>/dev/null | awk '/^Address: / {print $2}' | tail -n 1)"
+    fi
+    if [ -z "${AMF_N2_IP}" ]; then
+      echo "[gNB wrapper] failed to resolve AMF service: ${AMF_N2_HOST}" >&2
+      exit 1
+    fi
+    RAN_N2_IP="$(hostname -i | awk '{print $1}')"
+    if [ -z "${RAN_N2_IP}" ]; then
+      echo "[gNB wrapper] failed to detect Pod IP for RAN_N2_IP" >&2
+      exit 1
+    fi
+{{- else }}
+    AMF_N2_IP="{{ .amf.n2if.ipAddress }}"
+    RAN_N2_IP="{{ .n2if.ipAddress }}"
+{{- end }}
+    AMF_N2_PORT="{{ .amf.n2if.port }}"
+    echo "[gNB wrapper] using AMF endpoint ${AMF_N2_IP}:${AMF_N2_PORT}, ranN2Ip=${RAN_N2_IP}"
+
+    cp {{ .volume.mount }}/gnb.yaml /tmp/gnb.yaml
+    sed -i "s|AMF_N2_IP|${AMF_N2_IP}|g" /tmp/gnb.yaml
+    sed -i "s|AMF_N2_PORT|${AMF_N2_PORT}|g" /tmp/gnb.yaml
+    sed -i "s|RAN_N2_IP|${RAN_N2_IP}|g" /tmp/gnb.yaml
+
+    exec ./free-ran-ue gnb -c /tmp/gnb.yaml
+
 {{- end }}
 {{- end }}

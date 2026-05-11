@@ -22,28 +22,29 @@ spec:
         app: {{ $.Values.projectName }}
         component: {{ .name }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/gnb/gnb-configmap.yaml") $ | sha256sum }}
         {{- include "freeranue.gnbAnnotations" $ | nindent 8 }}
-        {{- if or $.Values.global.n2network.enabled $.Values.global.n3network.enabled $.Values.global.rannetwork.enabled}}
+        {{- if and $.Values.global.gnb.multus.enabled (or $.Values.global.gnb.multus.n2network.enabled $.Values.global.gnb.multus.n3network.enabled $.Values.global.gnb.multus.rannetwork.enabled) }}
         k8s.v1.cni.cncf.io/networks: '[
-        {{- if $.Values.global.n2network.enabled }}
-            { "name": "{{ $.Values.global.n2network.name }}-{{ include "freeranue.fullname" $ }}",
+        {{- if $.Values.global.gnb.multus.n2network.enabled }}
+            { "name": "{{ $.Values.global.gnb.multus.n2network.name }}-{{ include "freeranue.fullname" $ }}",
               "interface": "n2",
-              "ips": [ "{{ .n2if.ipAddress }}/{{ $.Values.global.n2network.cidr }}" ],
-              "gateway": [ "{{ $.Values.global.n2network.gatewayIP }}" ]
+              "ips": [ "{{ .n2if.ipAddress }}/{{ $.Values.global.gnb.multus.n2network.cidr }}" ],
+              "gateway": [ "{{ $.Values.global.gnb.multus.n2network.gatewayIP }}" ]
             },
         {{- end }}
-        {{- if $.Values.global.n3network.enabled }}
-            { "name": "{{ $.Values.global.n3network.name }}-{{ include "freeranue.fullname" $ }}",
+        {{- if $.Values.global.gnb.multus.n3network.enabled }}
+            { "name": "{{ $.Values.global.gnb.multus.n3network.name }}-{{ include "freeranue.fullname" $ }}",
               "interface": "n3",
-              "ips": [ "{{ .n3if.ipAddress }}/{{ $.Values.global.n3network.cidr }}" ],
-              "gateway": [ "{{ $.Values.global.n3network.gatewayIP }}" ]
+              "ips": [ "{{ .n3if.ipAddress }}/{{ $.Values.global.gnb.multus.n3network.cidr }}" ],
+              "gateway": [ "{{ $.Values.global.gnb.multus.n3network.gatewayIP }}" ]
             },
         {{- end }}
-        {{- if $.Values.global.rannetwork.enabled }}
-            { "name": "{{ $.Values.global.rannetwork.name }}-{{ include "freeranue.fullname" $ }}",
+        {{- if $.Values.global.gnb.multus.rannetwork.enabled }}
+            { "name": "{{ $.Values.global.gnb.multus.rannetwork.name }}-{{ include "freeranue.fullname" $ }}",
               "interface": "ran",
-              "ips": [ "{{ .ranif.ipAddress }}/{{ $.Values.global.rannetwork.cidr }}" ],
-              "gateway": [ "{{ $.Values.global.rannetwork.gatewayIP }}" ]
+              "ips": [ "{{ .ranif.ipAddress }}/{{ $.Values.global.gnb.multus.rannetwork.cidr }}" ],
+              "gateway": [ "{{ $.Values.global.gnb.multus.rannetwork.gatewayIP }}" ]
             }
         {{- end }}
             ]'
@@ -53,14 +54,24 @@ spec:
         {{- toYaml .imagePullSecrets | nindent 8 }}
       securityContext:
         {{- toYaml .podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: wait-amf
+        {{- with $.Values.initcontainers.sctp_test }}
+        image: {{ .image }}:{{ .tag }}
+        {{- end }}
+{{- if .amf.service.ngap.enabled }}
+        command: ["sh", "-c", "until sctp_test -s -H 0.0.0.0 -P 25000 -h {{ $.Values.global.free5gcReleaseName }}-{{ .amf.n2if.serviceName }} -p {{ .amf.n2if.port }}; do echo waiting for the AMF; sleep 2; done;"]
+{{- else }}
+        command: ["sh", "-c", "until sctp_test -s -H 0.0.0.0 -P 25000 -h {{ .amf.n2if.ipAddress }} -p {{ .amf.n2if.port }}; do echo waiting for the AMF; sleep 2; done;"]
+{{- end }}
       containers:
       - image: {{ .image.name }}:{{ .image.tag | default $.Chart.AppVersion }}
         name: {{ .name }}
         securityContext:
           capabilities:
             add: ["NET_ADMIN"]
-        command: ["./free-ran-ue"]
-        args: ["gnb", "-c", "{{ .volume.mount }}/gnb.yaml"]
+        command: ["/bin/sh", "-c"]
+        args: ["{{ .volume.mount }}/wrapper.sh"]
         volumeMounts:
         - mountPath: {{ .volume.mount }}
           name: {{ .volume.name }}
@@ -79,5 +90,11 @@ spec:
       - name: {{ .volume.name }}
         configMap:
           name: {{ .configmap.name }}
+          items:
+          - key: gnb.yaml
+            path: gnb.yaml
+          - key: wrapper.sh
+            path: wrapper.sh
+            mode: 0755
 {{- end }}
 {{- end }}

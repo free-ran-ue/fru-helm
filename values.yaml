@@ -1,33 +1,42 @@
 projectName: freeranue
 
+initcontainers:
+  sctp_test:
+    image: towards5gs/sctp_test
+    tag: latest
+
 global:
-  n2network:
-    enabled: true
-    name: n2network
-    type: ipvlan
-    masterIf: ens19
-    subnetIP: 10.100.50.248
-    cidr: 29
-    gatewayIP: 10.100.50.254
-    excludeIP: 10.100.50.254
-  n3network:
-    enabled: true
-    name: n3network
-    type: ipvlan
-    masterIf: ens19
-    subnetIP: 10.100.50.232
-    cidr: 29
-    gatewayIP: 10.100.50.238
-    excludeIP: 10.100.50.238
-  rannetwork:
-    enabled: true
-    name: rannetwork
-    type: ipvlan
-    masterIf: ens19
-    subnetIP: 10.100.50.216
-    cidr: 29
-    gatewayIP: 10.100.50.222
-    excludeIP: 10.100.50.222
+  free5gcReleaseName: free5gc-helm  # Name of the free5gc helm release
+  gnb:
+    multus:
+      enabled: true
+      n2network:
+        enabled: true
+        name: n2network
+        type: ipvlan
+        masterIf: ens19
+        subnetIP: 10.100.50.248
+        cidr: 29
+        gatewayIP: 10.100.50.254
+        excludeIP: 10.100.50.254
+      n3network:
+        enabled: true
+        name: n3network
+        type: ipvlan
+        masterIf: ens19
+        subnetIP: 10.100.50.232
+        cidr: 29
+        gatewayIP: 10.100.50.238
+        excludeIP: 10.100.50.238
+      rannetwork:
+        enabled: true
+        name: rannetwork
+        type: ipvlan
+        masterIf: ens19
+        subnetIP: 10.100.50.216
+        cidr: 29
+        gatewayIP: 10.100.50.222
+        excludeIP: 10.100.50.222
 
 gnb:
   enabled: true
@@ -53,10 +62,11 @@ gnb:
   amf:
     n2if:  # NGAP
       ipAddress: 10.100.50.249
+      serviceName: free5gc-amf-amf-n2
       port: 38412
     service:
       ngap:
-        enabled: false
+        enabled: true
 
   podAnnotations: {}
     # additional annotations
@@ -72,15 +82,15 @@ gnb:
 
   configuration: |-
     gnb:
-      amfN2Ip: "10.100.50.249" # AMF N2 IP at core network
-      ranN2Ip: "10.100.50.250" # RAN N2 IP for connecting to AMF
+      amfN2Ip: "AMF_N2_IP" # AMF N2 endpoint (IP or service), replaced by wrapper
+      ranN2Ip: "RAN_N2_IP" # RAN N2 IP for connecting to AMF, replaced by wrapper
       upfN3Ip: "10.100.50.233" # UPF N3 IP at core network
       ranN3Ip: "10.100.50.236" # RAN N3 IP for connecting to UPF
 
       ranControlPlaneIp: "10.100.50.217" # RAN Control Plane IP open for UE connection
       ranDataPlaneIp: "10.100.50.217" # RAN Data Plane IP open for UE connection
 
-      amfN2Port: 38412 # AMF N2 SCTP port at core network
+      amfN2Port: AMF_N2_PORT # AMF N2 SCTP port at core network, replaced by wrapper
       ranN2Port: 38413 # RAN N2 SCTP port for connecting to AMF
       upfN3Port: 2152 # UPF N3 GTP-U port at core network
       ranN3Port: 2152 # RAN N3 GTP-U port for connecting to UPF

@@ -23,12 +23,12 @@ spec:
         component: {{ .name }}
       annotations:
         {{- include "freeranue.ueAnnotations" $ | nindent 8 }}
-        {{- if $.Values.global.rannetwork.enabled }}
+        {{- if and $.Values.global.gnb.multus.enabled $.Values.global.gnb.multus.rannetwork.enabled }}
         k8s.v1.cni.cncf.io/networks: '[
-            { "name": "{{ $.Values.global.rannetwork.name }}-{{ include "freeranue.fullname" $ }}",
+            { "name": "{{ $.Values.global.gnb.multus.rannetwork.name }}-{{ include "freeranue.fullname" $ }}",
               "interface": "ran",
-              "ips": [ "{{ .ranif.ipAddress }}/{{ $.Values.global.rannetwork.cidr }}" ],
-              "gateway": [ "{{ $.Values.global.rannetwork.gatewayIP }}" ]
+              "ips": [ "{{ .ranif.ipAddress }}/{{ $.Values.global.gnb.multus.rannetwork.cidr }}" ],
+              "gateway": [ "{{ $.Values.global.gnb.multus.rannetwork.gatewayIP }}" ]
             }
             ]'
         {{- end }}
