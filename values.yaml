@@ -161,8 +161,8 @@ ue:
 
   configuration: |-
     ue:
-      ranControlPlaneIp: "gnb-service" # gNB control plane endpoint
-      ranDataPlaneIp: "gnb-service" # gNB data plane endpoint
+      ranControlPlaneIp: "GNB_CTRL_IP" # gNB control plane endpoint, replaced by wrapper
+      ranDataPlaneIp: "GNB_DATA_IP" # gNB data plane endpoint, replaced by wrapper
 
       ranControlPlanePort: 31413 # RAN Control Plane port open for UE connection
       ranDataPlanePort: 31414 # RAN Data Plane port open for UE connection
