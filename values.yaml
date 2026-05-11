@@ -72,6 +72,10 @@ gnb:
     service:
       ngap:
         enabled: false
+  upf:
+    n3if:
+      ipAddress: 10.100.50.233
+      serviceName: free5gc-upf-iupf1-service
 
   podAnnotations: {}
     # additional annotations
@@ -89,7 +93,7 @@ gnb:
     gnb:
       amfN2Ip: "AMF_N2_IP" # AMF N2 endpoint (IP or service), replaced by wrapper
       ranN2Ip: "RAN_N2_IP" # RAN N2 IP for connecting to AMF, replaced by wrapper
-      upfN3Ip: "10.100.50.233" # UPF N3 IP at core network
+      upfN3Ip: "UPF_N3_IP" # UPF N3 IP at core network, replaced by wrapper
       ranN3Ip: "RAN_N3_IP" # RAN N3 IP for connecting to UPF, replaced by wrapper
 
       ranControlPlaneIp: "RAN_CTRL_IP" # RAN Control Plane IP open for UE connection, replaced by wrapper

@@ -17,6 +17,7 @@ data:
 
 {{- if $.Values.global.gnb.multus.enabled }}
     AMF_N2_IP="{{ .amf.n2if.ipAddress }}"
+  UPF_N3_IP="{{ .upf.n3if.ipAddress }}"
     RAN_N2_IP="{{ .n2if.ipAddress }}"
     RAN_N3_IP="{{ .n3if.ipAddress }}"
     RAN_CTRL_IP="{{ .ranif.ipAddress }}"
@@ -33,6 +34,18 @@ data:
       echo "[gNB wrapper] failed to resolve AMF service: ${AMF_N2_HOST}" >&2
       exit 1
     fi
+
+    UPF_N3_HOST="{{ $.Values.global.free5gcReleaseName }}-{{ .upf.n3if.serviceName }}"
+    echo "[gNB wrapper] resolving UPF service: ${UPF_N3_HOST}"
+    UPF_N3_IP="$(getent hosts "${UPF_N3_HOST}" 2>/dev/null | awk 'NR==1 {print $1}')"
+    if [ -z "${UPF_N3_IP}" ]; then
+      UPF_N3_IP="$(nslookup "${UPF_N3_HOST}" 2>/dev/null | awk '/^Address: / {print $2}' | tail -n 1)"
+    fi
+    if [ -z "${UPF_N3_IP}" ]; then
+      echo "[gNB wrapper] failed to resolve UPF service: ${UPF_N3_HOST}" >&2
+      exit 1
+    fi
+
     POD_IP="$(hostname -i | awk '{print $1}')"
     if [ -z "${POD_IP}" ]; then
       echo "[gNB wrapper] failed to detect Pod IP" >&2
@@ -45,11 +58,12 @@ data:
     GNB_API_IP="${POD_IP}"
 {{- end }}
     AMF_N2_PORT="{{ .amf.n2if.port }}"
-    echo "[gNB wrapper] using AMF endpoint ${AMF_N2_IP}:${AMF_N2_PORT}, ranN2Ip=${RAN_N2_IP}"
+    echo "[gNB wrapper] using AMF endpoint ${AMF_N2_IP}:${AMF_N2_PORT}, UPF endpoint ${UPF_N3_IP}:2152, ranN2Ip=${RAN_N2_IP}"
 
     cp {{ .volume.mount }}/gnb.yaml /tmp/gnb.yaml
     sed -i "s|AMF_N2_IP|${AMF_N2_IP}|g" /tmp/gnb.yaml
     sed -i "s|AMF_N2_PORT|${AMF_N2_PORT}|g" /tmp/gnb.yaml
+    sed -i "s|UPF_N3_IP|${UPF_N3_IP}|g" /tmp/gnb.yaml
     sed -i "s|RAN_N2_IP|${RAN_N2_IP}|g" /tmp/gnb.yaml
     sed -i "s|RAN_N3_IP|${RAN_N3_IP}|g" /tmp/gnb.yaml
     sed -i "s|RAN_CTRL_IP|${RAN_CTRL_IP}|g" /tmp/gnb.yaml
