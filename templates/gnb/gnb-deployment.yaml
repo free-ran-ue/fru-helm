@@ -59,7 +59,9 @@ spec:
         {{- with $.Values.initcontainers.sctp_test }}
         image: {{ .image }}:{{ .tag }}
         {{- end }}
-{{- if .amf.service.ngap.enabled }}
+      {{- if and (not $.Values.global.gnb.multus.enabled) (not .amf.service.ngap.enabled) }}
+        command: ["sh", "-c", "until sctp_test -s -H 0.0.0.0 -P 25000 -h {{ $.Values.global.free5gcReleaseName }}-{{ .amf.n2if.serviceName }} -p {{ .amf.n2if.port }}; do echo waiting for the AMF; sleep 2; done;"]
+      {{- else if .amf.service.ngap.enabled }}
         command: ["sh", "-c", "until sctp_test -s -H 0.0.0.0 -P 25000 -h {{ $.Values.global.free5gcReleaseName }}-{{ .amf.n2if.serviceName }} -p {{ .amf.n2if.port }}; do echo waiting for the AMF; sleep 2; done;"]
 {{- else }}
         command: ["sh", "-c", "until sctp_test -s -H 0.0.0.0 -P 25000 -h {{ .amf.n2if.ipAddress }} -p {{ .amf.n2if.port }}; do echo waiting for the AMF; sleep 2; done;"]

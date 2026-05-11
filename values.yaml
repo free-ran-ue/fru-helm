@@ -66,7 +66,7 @@ gnb:
       port: 38412
     service:
       ngap:
-        enabled: true
+        enabled: false  # force AMF service mode even when multus is enabled
 
   podAnnotations: {}
     # additional annotations

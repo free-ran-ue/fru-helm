@@ -15,7 +15,7 @@ data:
     #!/bin/sh
     set -e
 
-{{- if .amf.service.ngap.enabled }}
+{{- if or (not $.Values.global.gnb.multus.enabled) .amf.service.ngap.enabled }}
     AMF_N2_HOST="{{ $.Values.global.free5gcReleaseName }}-{{ .amf.n2if.serviceName }}"
     echo "[gNB wrapper] resolving AMF service: ${AMF_N2_HOST}"
     AMF_N2_IP="$(getent hosts "${AMF_N2_HOST}" 2>/dev/null | awk 'NR==1 {print $1}')"
